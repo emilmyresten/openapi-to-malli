@@ -34,16 +34,19 @@
                   :int))
            (is (= (get-malli-type "boolean" nil)
                   :boolean)))}
-  [type format]
-  (let [t (get type-map type)]
-    (cond
-      (map? t)
-      (let [format (or (get t format)
-                       (:default t))]
-        format)
+  ([{type :type
+     format :format}]
+   (get-malli-type type format))
+  ([type format]
+   (let [t (get type-map type)]
+     (cond
+       (map? t)
+       (let [format (or (get t format)
+                        (:default t))]
+         format)
 
-      :else
-      t)))
+       :else
+       t))))
 
 (defn get-ref-type
   {:test (fn []
@@ -53,6 +56,21 @@
   (let [ref-name (->> (clojure.string/split ref-type #"/")
                       (last))]
     (symbol ref-name)))
+
+(defn openapi-object?
+  [{type       :type
+    properties :properties}]
+  (or (= "object" type)
+      (and (nil? type)
+           properties)))
+
+(defn openapi-array?
+  [{type :type}]
+  (= "array" type))
+
+(defn openapi-ref?
+  [{ref :$ref}]
+  ref)
 
 (declare parse-array)
 (defn parse-object
@@ -78,6 +96,9 @@
                    [:prop2 {:optional false} [:vector
                                               [:map {:closed true}
                                                [:nestedProp2 {:optional false} :string]]]]]))
+           (is (= (parse-object (:TestSchemaObjectWithoutType test-schemas))
+                  [:map {:closed true}
+                   [:prop1 {:optional false} :int]]))
            )}
   [o]
   (let [required-properties (->> (:required o)
@@ -85,20 +106,19 @@
                                  (into #{}))]
     (->> (:properties o)
          (reduce-kv (fn [a k v]
-                      (let [is-optional (not (contains? required-properties k))
-                            type (get-malli-type (:type v) (:format v))]
+                      (let [is-optional (not (contains? required-properties k))]
                         (conj a (cond
-                                  (= :vector type)
+                                  (openapi-array? v)
                                   [k {:optional is-optional} (parse-array v)]
 
-                                  (= :map type)
+                                  (openapi-object? v)
                                   [k {:optional is-optional} (parse-object v)]
 
-                                  (:$ref v)
+                                  (openapi-ref? v)
                                   [k {:optional is-optional} (get-ref-type (:$ref v))]
 
                                   :else
-                                  [k {:optional is-optional} type]))))
+                                  [k {:optional is-optional} (get-malli-type v)]))))
                     [:map {:closed true}]))))
 
 (defn parse-array
@@ -111,31 +131,30 @@
   [a]
   (let [element (get-in a [:items])]
     (cond
-      (:$ref element)
+      (openapi-ref? element)
       [:vector (get-ref-type (:$ref element))]
 
-      (= (:type element) "object")
+      (openapi-object? element)
       [:vector (parse-object element)]
 
+      (openapi-array? element)
+      [:vector (parse-array element)]
+
       :else
-      [:vector (get-malli-type (:type element) (:format element))])
+      [:vector (get-malli-type element)])
     ))
 
 (defn parse-schema-value
   [v]
-  (let [type (-> (:type v)
-                 (keyword))]
-    (cond
-      (or (= :object type)
-          (and (nil? type)
-               (:properties v)))
-      (parse-object v)
+  (cond
+    (openapi-object? v)
+    (parse-object v)
 
-      (= :array type)
-      (parse-array v)
+    (openapi-array? v)
+    (parse-array v)
 
-      :else
-      (get-malli-type (:type v) (:format v)))))
+    :else
+    (get-malli-type (:type v) (:format v))))
 
 (defn openapi->malli
   [schemas]

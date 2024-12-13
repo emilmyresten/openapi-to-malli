@@ -17,6 +17,14 @@ components:
         prop4:
           type: number
 
+    TestSchemaObjectWithoutType:
+      required:
+        - prop1
+      properties:
+        prop1:
+          type: number
+          format: integer
+
     TestSchemaObjectWithArray:
       type: object
       required:
