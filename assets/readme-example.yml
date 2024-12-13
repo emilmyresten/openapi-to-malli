@@ -21,10 +21,6 @@ components:
       type: object
       required:
         - id
-        - slot
-        - startTime
-        - revealResultTime
-        - dismissTime
         - text
         - alternatives
       properties:
