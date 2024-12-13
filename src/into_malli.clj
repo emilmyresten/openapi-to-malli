@@ -12,7 +12,8 @@
 
 (def type-map {"object"  :map
                "array"   :vector
-               "string"  :string
+               "string"  {"uuid" :uuid
+                          :default :string}
                "integer" :int
                "number"  {"integer" :int
                           "double"  :double
