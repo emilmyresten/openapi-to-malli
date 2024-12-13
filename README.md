@@ -32,6 +32,12 @@ bb -m into-malli -f ./assets/readme-example.yml
   [:text {:optional false} :string]])
 ```
 
+## Setup:
+Requirements:
+- babashka
+- clj-kondo (optional)
+
+> clj-kondo --lint "$(clojure -Spath)" --dependencies --parallel --copy-configs
 
 ## Run:
 From the project root, run
