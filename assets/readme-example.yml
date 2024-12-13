@@ -1,0 +1,51 @@
+components:
+  schemas:
+    GetGamesIdResponse:
+      type: object
+      required:
+        - id
+        - videoUrl
+        - questions
+      properties:
+        id:
+          type: string
+          format: uuid
+        videoUrl:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+
+    Question:
+      type: object
+      required:
+        - id
+        - slot
+        - startTime
+        - revealResultTime
+        - dismissTime
+        - text
+        - alternatives
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        alternatives:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alternative'
+
+    Alternative:
+      type: object
+      required:
+        - id
+        - text
+      properties:
+        id:
+          type: string
+          format: uuid
+        text:
+          type: string

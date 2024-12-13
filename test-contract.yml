@@ -1,0 +1,76 @@
+components:
+  schemas:
+    TestSchemaObject:
+      type: object
+      required:
+        - prop1
+        - prop2
+        - prop3
+      properties:
+        prop1:
+          type: number
+          format: integer
+        prop2:
+          type: string
+        prop3:
+          type: boolean
+        prop4:
+          type: number
+
+    TestSchemaObjectWithArray:
+      type: object
+      required:
+        - prop1
+        - prop2
+      properties:
+        prop1:
+          type: number
+          format: integer
+        prop2:
+          type: array
+          items:
+            type: string
+
+    TestSchemaObjectWithRefProp:
+      type: object
+      required:
+        - prop1
+        - prop2
+      properties:
+        prop1:
+          type: string
+          format: uuid
+        prop2:
+          $ref: '#/components/schemas/TestSchemaObject'
+
+    TestSchemaWithObjectAndNestedObjectArrays:
+      required:
+        - prop1
+        - prop2
+      properties:
+        prop1:
+          type: object
+          properties:
+            nestedProp1:
+              type: number
+              format: double
+        prop2:
+          type: array
+          items:
+            type: object
+            required:
+              - nestedProp2
+            properties:
+              nestedProp2:
+                type: string
+                format: uuid
+
+    TestSchemaArray:
+      type: array
+      items:
+        type: string
+
+    TestSchemaArrayRef:
+      type: array
+      items:
+        $ref: '#/components/schemas/TestSchemaObject'

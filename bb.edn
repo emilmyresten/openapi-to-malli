@@ -1,0 +1,1 @@
+{:deps {emil-myresten/openapi-to-malli {:local/root "."}}}
