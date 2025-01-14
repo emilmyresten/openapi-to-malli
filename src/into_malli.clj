@@ -12,7 +12,7 @@
 
 (def type-map {"object"  :map
                "array"   :vector
-               "string"  {"uuid" :uuid
+               "string"  {"uuid"   :uuid
                           :default :string}
                "integer" :int
                "number"  {"integer" :int
@@ -35,7 +35,7 @@
                   :int))
            (is (= (get-malli-type "boolean" nil)
                   :boolean)))}
-  ([{type :type
+  ([{type   :type
      format :format}]
    (get-malli-type type format))
   ([type format]
@@ -78,28 +78,28 @@
   {:test (fn []
            (is (= (parse-object (:TestSchemaObject test-schemas))
                   [:map {:closed true}
-                   [:prop1 {:optional false} :int]
-                   [:prop2 {:optional false} :string]
-                   [:prop3 {:optional false} :boolean]
-                   [:prop4 {:optional true} :int]]))
+                   [:prop1 :int]
+                   [:prop2 :string]
+                   [:prop3 :boolean]
+                   [:prop4 [:maybe :int]]]))
            (is (= (parse-object (:TestSchemaObjectWithArray test-schemas))
                   [:map {:closed true}
-                   [:prop1 {:optional false} :int]
-                   [:prop2 {:optional false} [:vector :string]]]))
+                   [:prop1 :int]
+                   [:prop2 [:vector :string]]]))
            (is (= (parse-object (:TestSchemaObjectWithRefProp test-schemas))
                   [:map {:closed true}
-                   [:prop1 {:optional false} :string]
-                   [:prop2 {:optional false} 'TestSchemaObject]]))
+                   [:prop1 :uuid]
+                   [:prop2 'TestSchemaObject]]))
            (is (= (parse-object (:TestSchemaWithObjectAndNestedObjectArrays test-schemas))
                   [:map {:closed true}
-                   [:prop1 {:optional false} [:map {:closed true}
-                                              [:nestedProp1 {:optional true} :double]]]
-                   [:prop2 {:optional false} [:vector
-                                              [:map {:closed true}
-                                               [:nestedProp2 {:optional false} :string]]]]]))
+                   [:prop1 [:map {:closed true}
+                            [:nestedProp1 [:maybe :double]]]]
+                   [:prop2 [:vector
+                            [:map {:closed true}
+                             [:nestedProp2 :uuid]]]]]))
            (is (= (parse-object (:TestSchemaObjectWithoutType test-schemas))
                   [:map {:closed true}
-                   [:prop1 {:optional false} :int]]))
+                   [:prop1 :int]]))
            )}
   [o]
   (let [required-properties (->> (:required o)
@@ -110,17 +110,27 @@
                       (let [is-optional (not (contains? required-properties k))]
                         (conj a (cond
                                   (openapi-array? v)
-                                  [k {:optional is-optional} (parse-array v)]
+                                  [k (if is-optional
+                                       [:maybe (parse-array v)]
+                                       (parse-array v))]
 
                                   (openapi-object? v)
-                                  [k {:optional is-optional} (parse-object v)]
+                                  [k (if is-optional
+                                       [:maybe (parse-object v)]
+                                       (parse-object v))]
 
                                   (openapi-ref? v)
-                                  [k {:optional is-optional} (get-ref-type (:$ref v))]
+                                  [k (if is-optional
+                                       [:maybe (get-ref-type (:$ref v))]
+                                       (get-ref-type (:$ref v)))]
 
                                   :else
-                                  [k {:optional is-optional} (get-malli-type v)]))))
+                                  [k (if is-optional
+                                       [:maybe (get-malli-type v)]
+                                       (get-malli-type v))]))))
                     [:map {:closed true}]))))
+
+()
 
 (defn parse-array
   {:test (fn []
