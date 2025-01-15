@@ -13,23 +13,19 @@
 bb -m into-malli -f ./assets/readme-example.yml
 ```
 ```clojure
-(def GetGamesIdResponse
- [:map
-  {:closed true}
-  [:id {:optional false} :string]
-  [:videoUrl {:optional false} :string]
-  [:questions {:optional false} [:vector Question]]])
+(def Game
+  [:map
+   {:closed true}
+   [:id :uuid]
+   [:videoUrl [:maybe :string]]
+   [:questions [:vector Question]]])
 (def Question
- [:map
-  {:closed true}
-  [:id {:optional false} :string]
-  [:text {:optional false} :string]
-  [:alternatives {:optional false} [:vector Alternative]]])
-(def Alternative
- [:map
-  {:closed true}
-  [:id {:optional false} :string]
-  [:text {:optional false} :string]])
+  [:map
+   {:closed true}
+   [:id :uuid]
+   [:text :string]
+   [:alternatives [:vector Alternative]]])
+(def Alternative [:map {:closed true} [:id :uuid] [:text :string]])
 ```
 
 ## Setup:
