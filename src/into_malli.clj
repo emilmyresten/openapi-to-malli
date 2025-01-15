@@ -5,10 +5,10 @@
             [clj-yaml.core :as yaml]))
 
 
-(def ^:private test-openapi-specification (->> (slurp "./test-contract.yml")
-                                               (yaml/parse-string)))
+(defn ^:private test-openapi-specification [] (->> (slurp "./test-contract.yml")
+                                                   (yaml/parse-string)))
 
-(def ^:private test-schemas (get-in test-openapi-specification [:components :schemas]))
+(defn ^:private test-schemas [] (get-in (test-openapi-specification) [:components :schemas]))
 
 (def type-map {"object"  :map
                "array"   :vector
@@ -76,28 +76,28 @@
 (declare parse-array)
 (defn parse-object
   {:test (fn []
-           (is (= (parse-object (:TestSchemaObject test-schemas))
+           (is (= (parse-object (:TestSchemaObject (test-schemas)))
                   [:map {:closed true}
                    [:prop1 :int]
                    [:prop2 :string]
                    [:prop3 :boolean]
                    [:prop4 [:maybe :int]]]))
-           (is (= (parse-object (:TestSchemaObjectWithArray test-schemas))
+           (is (= (parse-object (:TestSchemaObjectWithArray (test-schemas)))
                   [:map {:closed true}
                    [:prop1 :int]
                    [:prop2 [:vector :string]]]))
-           (is (= (parse-object (:TestSchemaObjectWithRefProp test-schemas))
+           (is (= (parse-object (:TestSchemaObjectWithRefProp (test-schemas)))
                   [:map {:closed true}
                    [:prop1 :uuid]
                    [:prop2 'TestSchemaObject]]))
-           (is (= (parse-object (:TestSchemaWithObjectAndNestedObjectArrays test-schemas))
+           (is (= (parse-object (:TestSchemaWithObjectAndNestedObjectArrays (test-schemas)))
                   [:map {:closed true}
                    [:prop1 [:map {:closed true}
                             [:nestedProp1 [:maybe :double]]]]
                    [:prop2 [:vector
                             [:map {:closed true}
                              [:nestedProp2 :uuid]]]]]))
-           (is (= (parse-object (:TestSchemaObjectWithoutType test-schemas))
+           (is (= (parse-object (:TestSchemaObjectWithoutType (test-schemas)))
                   [:map {:closed true}
                    [:prop1 :int]]))
            )}
@@ -134,9 +134,9 @@
 
 (defn parse-array
   {:test (fn []
-           (is (= (parse-array (:TestSchemaArrayRef test-schemas))
+           (is (= (parse-array (:TestSchemaArrayRef (test-schemas)))
                   [:vector 'TestSchemaObject]))
-           (is (= (parse-array (:TestSchemaArray test-schemas))
+           (is (= (parse-array (:TestSchemaArray (test-schemas)))
                   [:vector :string]))
            )}
   [a]
@@ -195,9 +195,8 @@
     (catch Exception _
       (println help-str))))
 
-
-
-
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
 
 
 

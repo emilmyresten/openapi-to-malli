@@ -40,9 +40,13 @@ Requirements:
 > clj-kondo --lint "$(clojure -Spath)" --dependencies --parallel --copy-configs
 
 ## Run:
-From the project root, run
+During development, just run it as a regular deps.edn project. When running as a script, you can either do:
 ```
 bb -m into-malli -f <path-to-openapi-spec>
+```
+Or just add a symbolic link to src/into_malli.clj in some directory that is on PATH and invoke it like
+```
+into-malli -f <path-to-openapi-spec>
 ```
 
 For development, just run as a normal deps-project
