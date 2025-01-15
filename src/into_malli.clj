@@ -1,7 +1,9 @@
 #!/usr/bin/env bb
 
 (ns into-malli
-  (:require [clojure.test :refer [is]]
+  (:require [clojure.pprint :refer [pprint with-pprint-dispatch code-dispatch]]
+            [clojure.string :refer [split]]
+            [clojure.test :refer [is]]
             [clj-yaml.core :as yaml]))
 
 
@@ -54,7 +56,7 @@
            (is (= (get-ref-type "#/components/schemas/TestSchemaObject")
                   'TestSchemaObject)))}
   [ref-type]
-  (let [ref-name (->> (clojure.string/split ref-type #"/")
+  (let [ref-name (->> (split ref-type #"/")
                       (last))]
     (symbol ref-name)))
 
@@ -72,6 +74,17 @@
 (defn openapi-ref?
   [{ref :$ref}]
   ref)
+
+(defn maybe-maybe
+  {:test (fn []
+           (is (= (maybe-maybe true :int)
+                  [:maybe :int]))
+           (is (= (maybe-maybe false :int)
+                  :int)))}
+  [is-optional v]
+  (if is-optional
+    [:maybe v]
+    v))
 
 (declare parse-array)
 (defn parse-object
@@ -110,24 +123,16 @@
                       (let [is-optional (not (contains? required-properties k))]
                         (conj a (cond
                                   (openapi-array? v)
-                                  [k (if is-optional
-                                       [:maybe (parse-array v)]
-                                       (parse-array v))]
+                                  [k (maybe-maybe is-optional (parse-array v))]
 
                                   (openapi-object? v)
-                                  [k (if is-optional
-                                       [:maybe (parse-object v)]
-                                       (parse-object v))]
+                                  [k (maybe-maybe is-optional (parse-object v))]
 
                                   (openapi-ref? v)
-                                  [k (if is-optional
-                                       [:maybe (get-ref-type (:$ref v))]
-                                       (get-ref-type (:$ref v)))]
+                                  [k (maybe-maybe is-optional (get-ref-type (:$ref v)))]
 
                                   :else
-                                  [k (if is-optional
-                                       [:maybe (get-malli-type v)]
-                                       (get-malli-type v))]))))
+                                  [k (maybe-maybe is-optional (get-malli-type v))]))))
                     [:map {:closed true}]))))
 
 ()
@@ -179,8 +184,8 @@
 (defn print-the-malli-spec-as-clojure-code
   [specs]
   (doseq [spec specs]
-    (clojure.pprint/with-pprint-dispatch clojure.pprint/code-dispatch
-                                         (clojure.pprint/pprint spec))))
+    (with-pprint-dispatch code-dispatch
+                          (pprint spec))))
 
 (def help-str "Usage: -f [filename]")
 
@@ -191,6 +196,7 @@
           openapi-specification (->> (slurp filename)
                                      (yaml/parse-string))
           schemas (get-in openapi-specification [:components :schemas])]
+      (println openapi-specification)
       (print-the-malli-spec-as-clojure-code (openapi->malli schemas)))
     (catch Exception _
       (println help-str))))
