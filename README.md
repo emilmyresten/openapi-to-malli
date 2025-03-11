@@ -7,6 +7,7 @@
 - Doesn't at all take the best malli types into account
 - All maps are closed by default
 - Optionality is explicit
+- :maybe for optionals is needed to handle both {} and {:key nil}
 
 ## Example
 ```

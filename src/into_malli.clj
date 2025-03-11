@@ -91,28 +91,28 @@
   {:test (fn []
            (is (= (parse-object (:TestSchemaObject (test-schemas)))
                   [:map {:closed true}
-                   [:prop1 :int]
-                   [:prop2 :string]
-                   [:prop3 :boolean]
-                   [:prop4 [:maybe :int]]]))
+                   [:prop1 {:optional false} :int]
+                   [:prop2 {:optional false} :string]
+                   [:prop3 {:optional false} :boolean]
+                   [:prop4 {:optional true} [:maybe :int]]]))
            (is (= (parse-object (:TestSchemaObjectWithArray (test-schemas)))
                   [:map {:closed true}
-                   [:prop1 :int]
-                   [:prop2 [:vector :string]]]))
+                   [:prop1 {:optional false} :int]
+                   [:prop2 {:optional false} [:vector :string]]]))
            (is (= (parse-object (:TestSchemaObjectWithRefProp (test-schemas)))
                   [:map {:closed true}
-                   [:prop1 :uuid]
-                   [:prop2 'TestSchemaObject]]))
+                   [:prop1 {:optional false} :uuid]
+                   [:prop2 {:optional false} 'TestSchemaObject]]))
            (is (= (parse-object (:TestSchemaWithObjectAndNestedObjectArrays (test-schemas)))
                   [:map {:closed true}
-                   [:prop1 [:map {:closed true}
-                            [:nestedProp1 [:maybe :double]]]]
-                   [:prop2 [:vector
-                            [:map {:closed true}
-                             [:nestedProp2 :uuid]]]]]))
+                   [:prop1 {:optional false} [:map {:closed true}
+                                              [:nestedProp1 {:optional true} [:maybe :double]]]]
+                   [:prop2 {:optional false} [:vector
+                                              [:map {:closed true}
+                                               [:nestedProp2 {:optional false} :uuid]]]]]))
            (is (= (parse-object (:TestSchemaObjectWithoutType (test-schemas)))
                   [:map {:closed true}
-                   [:prop1 :int]]))
+                   [:prop1 {:optional false} :int]]))
            )}
   [o]
   (let [required-properties (->> (:required o)
@@ -123,19 +123,17 @@
                       (let [is-optional (not (contains? required-properties k))]
                         (conj a (cond
                                   (openapi-array? v)
-                                  [k (maybe-maybe is-optional (parse-array v))]
+                                  [k {:optional is-optional} (maybe-maybe is-optional (parse-array v))]
 
                                   (openapi-object? v)
-                                  [k (maybe-maybe is-optional (parse-object v))]
+                                  [k {:optional is-optional} (maybe-maybe is-optional (parse-object v))]
 
                                   (openapi-ref? v)
-                                  [k (maybe-maybe is-optional (get-ref-type (:$ref v)))]
+                                  [k {:optional is-optional} (maybe-maybe is-optional (get-ref-type (:$ref v)))]
 
                                   :else
-                                  [k (maybe-maybe is-optional (get-malli-type v))]))))
+                                  [k {:optional is-optional} (maybe-maybe is-optional (get-malli-type v))]))))
                     [:map {:closed true}]))))
-
-()
 
 (defn parse-array
   {:test (fn []
