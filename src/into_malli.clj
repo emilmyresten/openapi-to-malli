@@ -37,9 +37,20 @@
                   :int))
            (is (= (get-malli-type "boolean" nil)
                   :boolean)))}
-  ([{type   :type
-     format :format}]
-   (get-malli-type type format))
+  ([{type       :type
+     format     :format
+     min-length :minLength
+     max-length :maxLength}]
+   (let [type-properties (merge {}
+                                (when min-length {:min min-length})
+                                (when max-length {:max max-length}))
+         type (get-malli-type type format)]
+     (cond
+       (empty? type-properties)
+       type
+
+       :else
+       [type type-properties])))
   ([type format]
    (let [t (get type-map type)]
      (cond
@@ -92,7 +103,7 @@
            (is (= (parse-object (:TestSchemaObject (test-schemas)))
                   [:map {:closed true}
                    [:prop1 {:optional false} :int]
-                   [:prop2 {:optional false} :string]
+                   [:prop2 {:optional false} [:string {:min 1 :max 10}]]
                    [:prop3 {:optional false} :boolean]
                    [:prop4 {:optional true} [:maybe :int]]]))
            (is (= (parse-object (:TestSchemaObjectWithArray (test-schemas)))

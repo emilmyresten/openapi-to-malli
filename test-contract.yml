@@ -12,6 +12,8 @@ components:
           format: integer
         prop2:
           type: string
+          minLength: 1
+          maxLength: 10
         prop3:
           type: boolean
         prop4:
